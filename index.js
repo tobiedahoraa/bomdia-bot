@@ -63,6 +63,7 @@ client.on('messageCreate', async (message) => {
             guildId: channel.guild.id,
             adapterCreator: channel.guild.voiceAdapterCreator,
         });
+        connection.on('error', console.error);
 
         try {
             await entersState(connection, VoiceConnectionStatus.Ready, 5000);
@@ -98,7 +99,7 @@ client.on('messageCreate', async (message) => {
     }
 });
 
-client.once('ready', () => {
+client.once('clientReady', () => {
     console.log(`Bot online como ${client.user.tag}`);
 
     cron.schedule('0 8 * * *', async () => {
