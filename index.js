@@ -2,9 +2,7 @@ require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
 const fs = require('fs');
 const cron = require('node-cron');
-const ffmpeg = require('ffmpeg-static'); 
-
-process.env.FFMPEG_PATH = ffmpeg; 
+process.env.FFMPEG_PATH = 'ffmpeg'; 
 
 const {
     joinVoiceChannel,
@@ -84,8 +82,22 @@ client.on('messageCreate', async (message) => {
         });
         const audioPath = getRandomAudio();
 
-        const resource = createAudioResource(audioPath, { 
-            inputType: 'arbitrary',
+        const { createAudioResource, StreamType } = require('@discordjs/voice');
+        const { createReadStream } = require('fs');
+        const { spawn } = require('child_process');
+
+        const ffmpegProcess = spawn(process.env.FFMPEG_PATH, [
+            '-i', audioPath,
+            '-analyzeduration', '0',
+            '-loglevel', '0',
+            '-f', 's16le',
+            '-ar', '48000',
+            '-ac', '2',
+            'pipe:1'
+        ]);
+
+        const resource = createAudioResource(ffmpegProcess.stdout, {
+            inputType: StreamType.Raw,
             inlineVolume: true
         });
 
