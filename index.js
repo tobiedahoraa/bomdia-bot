@@ -2,7 +2,9 @@ require('dotenv').config();
 const { Client, GatewayIntentBits } = require('discord.js');
 const fs = require('fs');
 const cron = require('node-cron');
-process.env.FFMPEG_PATH = 'ffmpeg'; 
+const ffmpeg = require('ffmpeg-static'); 
+
+process.env.FFMPEG_PATH = ffmpeg; 
 
 const {
     joinVoiceChannel,
@@ -10,7 +12,8 @@ const {
     createAudioResource,
     AudioPlayerStatus,
     entersState,
-    VoiceConnectionStatus
+    VoiceConnectionStatus,
+    demuxProbe
 } = require('@discordjs/voice');
 
 const client = new Client({
@@ -62,6 +65,7 @@ client.on('messageCreate', async (message) => {
             guildId: channel.guild.id,
             adapterCreator: channel.guild.voiceAdapterCreator,
         });
+
         connection.on('stateChange', (oldState, newState) => {
             console.log(`Conexão: ${oldState.status} -> ${newState.status}`);
         });
@@ -77,27 +81,19 @@ client.on('messageCreate', async (message) => {
         }
 
         const player = createAudioPlayer();
+
         player.on('error', error => {
             console.error('Erro no player:', error);
         });
+
         const audioPath = getRandomAudio();
 
-        const { createAudioResource, StreamType } = require('@discordjs/voice');
-        const { createReadStream } = require('fs');
-        const { spawn } = require('child_process');
+        // 🔥 CORREÇÃO AQUI
+        const stream = fs.createReadStream(audioPath);
+        const probe = await demuxProbe(stream);
 
-        const ffmpegProcess = spawn(process.env.FFMPEG_PATH, [
-            '-i', audioPath,
-            '-analyzeduration', '0',
-            '-loglevel', '0',
-            '-f', 's16le',
-            '-ar', '48000',
-            '-ac', '2',
-            'pipe:1'
-        ]);
-
-        const resource = createAudioResource(ffmpegProcess.stdout, {
-            inputType: StreamType.Raw,
+        const resource = createAudioResource(probe.stream, {
+            inputType: probe.type,
             inlineVolume: true
         });
 
