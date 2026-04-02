@@ -63,10 +63,14 @@ client.on('messageCreate', async (message) => {
             guildId: channel.guild.id,
             adapterCreator: channel.guild.voiceAdapterCreator,
         });
+        connection.on('stateChange', (oldState, newState) => {
+            console.log(`Conexão: ${oldState.status} -> ${newState.status}`);
+        });
+
         connection.on('error', console.error);
 
         try {
-            await entersState(connection, VoiceConnectionStatus.Ready, 5000);
+            await entersState(connection, VoiceConnectionStatus.Ready, 20000);
         } catch (error) {
             console.error('Erro ao conectar:', error);
             connection.destroy();
@@ -74,6 +78,9 @@ client.on('messageCreate', async (message) => {
         }
 
         const player = createAudioPlayer();
+        player.on('error', error => {
+            console.error('Erro no player:', error);
+        });
         const audioPath = getRandomAudio();
 
         const resource = createAudioResource(audioPath, { 
