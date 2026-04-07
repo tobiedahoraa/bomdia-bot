@@ -26,7 +26,7 @@ const client = new Client({
 });
 
 const TOKEN = process.env.TOKEN;
-const CHANNEL_ID = '1440186148113879062';
+const CHANNEL_ID = '1468669280445792350';
 const mensagens = [
     '🌞 Bom dia, grupo!',
     '☕ Bom dia com café e felicidade!',
